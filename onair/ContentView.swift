@@ -12,11 +12,14 @@ struct OnAirView: View {
     @State private var softGlow = true // 控制忽亮忽暗的光暈變化
     
     var body: some View {
-        ZStack {
+        ZStack() {
             Color.black.edgesIgnoringSafeArea(.all) // 設定全螢幕黑色背景，提升沉浸感
             
+            
             Text("ON AIR")
-                .font(.system(size: UIScreen.main.bounds.width * 3 / 15, weight: .bold, design: .rounded)) // 文字大小根據螢幕寬度自適應
+//                 .font(.system(size: UIScreen.main.bounds.width * 3 / 15, weight: .bold, design: .rounded)) // 文字大小根據螢幕寬度自適應
+//                .font(.custom("LEDLIGHT", size: UIScreen.main.bounds.width * 3 / 15)) // 使用自定義像素字體
+                .font(.custom("10Pixel-Bold", size: UIScreen.main.bounds.width * 3 / 15)) // 使用自定義像素字體
                 .multilineTextAlignment(.center) // 確保文字水平置中
                 .foregroundColor(isGlowing ? .red : Color.red.opacity(0.2)) // 霓虹燈主要顏色與透明度變化
                 .shadow(color: isGlowing ? Color.red.opacity(1.0) : Color.red.opacity(0.4), radius: isGlowing ? 50 : 20) // 主要霓虹燈光暈效果
@@ -24,14 +27,29 @@ struct OnAirView: View {
                 .onAppear {
                     softGlowEffect() // 啟動持續忽亮忽暗效果
                 }
-            
-                Image("CRT1")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .blendMode(.multiply)
-                        .opacity(0.3)
+                
+                
+            Image("CRT1")
+                    .resizable()
+//                    .aspectRatio(contentMode: .fit)
+                    .blendMode(.multiply)
+                    .opacity(softGlow ? 0.2 : 0.4)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                
             
             GIFImage(name: "CRT3")
+                .opacity(softGlow ? 0.15 : 0.1)
+                .transition(.opacity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+//                .blur(radius: 5)
+                .mask(
+                        RadialGradient(gradient: Gradient(colors: [Color.white, Color.clear]),
+                                       center: .center,
+                                       startRadius: 250,
+                                       endRadius: 350)
+                    )
+                .blendMode(.overlay)
+            
             
                 
         }
@@ -42,6 +60,7 @@ struct OnAirView: View {
         .preferredColorScheme(.dark) // 強制使用深色模式，確保黑色背景一致
         .edgesIgnoringSafeArea(.all) // 隱藏底部橫條，提高沈浸感
         .persistentSystemOverlays(.hidden) //擋住底部橫條！！成功！
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
 //        .prefersHomeIndicatorAutoHidden(true) // 讓 Home Indicator 變暗
     }
     
