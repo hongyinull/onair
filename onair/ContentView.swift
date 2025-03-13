@@ -12,41 +12,54 @@ struct OnAirView: View {
     @State private var isGlowing = true // 控制主要霓虹燈開關
     @State private var softGlow = true // 控制忽亮忽暗的光暈變化
     @State private var isOn = true // 新增控制開關狀態
+    @State private var startTime: Date? = Date() //開始onAir時間
+    @State private var elapsed : Int = 0
     
     var body: some View {
         ZStack() {
             Color.black.edgesIgnoringSafeArea(.all) // 設定全螢幕黑色背景，提升沉浸感
             
-            
-            Text(isOn ? "ON AIR" : "ON AIR")
-//                 .font(.system(size: UIScreen.main.bounds.width * 3 / 15, weight: .bold, design: .rounded)) // 文字大小根據螢幕寬度自適應
-//                .font(.custom("LEDLIGHT", size: UIScreen.main.bounds.width * 3 / 15)) // 使用自定義像素字體
-//                .font(.custom("10Pixel-Bold", size: UIScreen.main.bounds.width * 3 / 15)) // 使用自定義像素字體
+            VStack(spacing: UIScreen.main.bounds.width > UIScreen.main.bounds.height ? -20 : -12){
+                Text(isOn ? "ON AIR" : "ON AIR")
+                //                 .font(.system(size: UIScreen.main.bounds.width * 3 / 15, weight: .bold, design: .rounded)) // 文字大小根據螢幕寬度自適應
+                //                .font(.custom("LEDLIGHT", size: UIScreen.main.bounds.width * 3 / 15)) // 使用自定義像素字體
+                //                .font(.custom("10Pixel-Bold", size: UIScreen.main.bounds.width * 3 / 15)) // 使用自定義像素字體
+                    .environment(\._lineHeightMultiple, 0.8)
+                    .font(.custom("10Pixel-Bold", size: (UIScreen.main.bounds.width > UIScreen.main.bounds.height ?
+                                                         UIScreen.main.bounds.width * 3.3 / 15 : UIScreen.main.bounds.height * 3 / 15) ))
+                    .multilineTextAlignment(.center) // 確保文字水平置中
+                    
+                    
+                Text({
+                    let h = elapsed / 3600, m = (elapsed % 3600) / 60, s = elapsed % 60
+                    return h > 0 ? String(format: "%02d:%02d:%02d", h, m, s)
+                    : String(format: "%02d:%02d", m, s)
+                }())
                 .font(.custom("10Pixel-Bold", size: (UIScreen.main.bounds.width > UIScreen.main.bounds.height ?
-                                                     UIScreen.main.bounds.width * 3.3 / 15 : UIScreen.main.bounds.height * 3 / 15) ))
-                .lineSpacing(-200)
-                .scaleEffect(isOn ? 1.0 : 0.98)
-                .animation(.spring(response: 0.8, dampingFraction: 0.65, blendDuration: 0.8), value: isOn)
+                                                     UIScreen.main.bounds.width * 1 / 20 : UIScreen.main.bounds.height * 1 / 20) ))
+                .transaction { $0.animation = .spring(response: 0.2, dampingFraction: 0.8) } // 🎯 為數字變化加上彈性動畫
+//                .contentTransition(.numericText()) // 🎯 內建數字動畫
+            }
+            .foregroundColor(isGlowing ? .red : Color.red.opacity(0.4)) // 霓虹燈主要顏色與透明度變化
+            .shadow(color: isGlowing ? Color.red.opacity(1.0) : Color.red.opacity(0.4), radius: isGlowing ? 50 : 20) // 主要霓虹燈光暈效果
+            .shadow(color: softGlow ? Color.red.opacity(0.8) : Color.red.opacity(0.5), radius: softGlow ? 20 : 10) // 額外忽亮忽暗的柔光
+            .onAppear {softGlowEffect()}
+            .scaleEffect(isOn ? 1.0 : 0.98)
+            .animation(.spring(response: 0.8, dampingFraction: 0.65, blendDuration: 0.8), value: isOn) //切換onOff狀態時的彈性過度動畫
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .onTapGesture {
+                //                    SoundPlayer.playSound("SwitchSound1")
+                HapticManager.trigger(.heavy)
+                switchOnOff()
+            }
+            //                .simultaneousGesture(
+            //                        DragGesture(minimumDistance: 0)
+            //                            .onChanged { _ in SoundManager.playSound("neonSwitchOn")
+            //                                HapticManager.trigger(.heavy)} // 按下時觸發
+            //                            .onEnded { _ in SoundManager.playSound("neonSwitchOff")
+            //                                HapticManager.trigger(.light)} // 鬆開時觸發
+            //                    )
 
-                .multilineTextAlignment(.center) // 確保文字水平置中
-                .foregroundColor(isGlowing ? .red : Color.red.opacity(0.3)) // 霓虹燈主要顏色與透明度變化
-                .shadow(color: isGlowing ? Color.red.opacity(1.0) : Color.red.opacity(0.4), radius: isGlowing ? 50 : 20) // 主要霓虹燈光暈效果
-                .shadow(color: softGlow ? Color.red.opacity(0.8) : Color.red.opacity(0.5), radius: softGlow ? 20 : 10) // 額外忽亮忽暗的柔光
-                .onTapGesture {
-//                    SoundPlayer.playSound("SwitchSound1")
-                    HapticManager.trigger(.heavy)
-                    switchOnOff()
-                }
-//                .simultaneousGesture(
-//                        DragGesture(minimumDistance: 0)
-//                            .onChanged { _ in SoundManager.playSound("neonSwitchOn")
-//                                HapticManager.trigger(.heavy)} // 按下時觸發
-//                            .onEnded { _ in SoundManager.playSound("neonSwitchOff")
-//                                HapticManager.trigger(.light)} // 鬆開時觸發
-//                    )
-                .onAppear {
-                        softGlowEffect()
-                }
                 
                 
             Image("CRT1")
@@ -100,6 +113,12 @@ struct OnAirView: View {
                 let flickerCount = Int.random(in: 2...5) // 每次閃爍 2 到 5 下
                 flicker(times: flickerCount)
             }
+            //順便設定每秒更新一次已過去秒數
+            Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+                if isOn{
+                    elapsed = Int((startTime?.timeIntervalSinceNow ?? 0) * -1)//重新字算已過去秒數
+                }
+            }
         }
     }
     
@@ -145,6 +164,7 @@ struct OnAirView: View {
         if isOn {
             // 開啟狀態
             SoundManager.playSound("neonSwitchOff")
+            startTimer()//將開始時間記錄為現在
             isGlowing = true
             softGlow = true
             softGlowEffect() // 重新啟動忽明忽暗效果
@@ -159,6 +179,10 @@ struct OnAirView: View {
         }
     }
     
+    //將開始時間記錄為現在
+    func startTimer() {
+        startTime = Date()
+    }
     
 }
 
@@ -196,6 +220,9 @@ struct HapticManager {
 //HapticManager.notify(.success)  // 成功回饋震動
 //HapticManager.notify(.error)    // 失敗回饋震動
 
+
+
+//計時器相關
 
 struct ContentView: View {
     var body: some View {
