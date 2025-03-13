@@ -18,18 +18,18 @@ struct OnAirView: View {
             Color.black.edgesIgnoringSafeArea(.all) // 設定全螢幕黑色背景，提升沉浸感
             
             
-            Text(isOn ? "ON AIR" : "OFF AIR")
+            Text(isOn ? "ON AIR" : "ON AIR")
 //                 .font(.system(size: UIScreen.main.bounds.width * 3 / 15, weight: .bold, design: .rounded)) // 文字大小根據螢幕寬度自適應
 //                .font(.custom("LEDLIGHT", size: UIScreen.main.bounds.width * 3 / 15)) // 使用自定義像素字體
 //                .font(.custom("10Pixel-Bold", size: UIScreen.main.bounds.width * 3 / 15)) // 使用自定義像素字體
                 .font(.custom("10Pixel-Bold", size: (UIScreen.main.bounds.width > UIScreen.main.bounds.height ?
-                                                     UIScreen.main.bounds.width * 3 / 15 : UIScreen.main.bounds.height * 3 / 15) ))
+                                                     UIScreen.main.bounds.width * 3.3 / 15 : UIScreen.main.bounds.height * 3 / 15) ))
                 .lineSpacing(-200)
-                .scaleEffect(isOn ? 1.0 : 0.95)
+                .scaleEffect(isOn ? 1.0 : 0.98)
                 .animation(.spring(response: 0.8, dampingFraction: 0.65, blendDuration: 0.8), value: isOn)
 
                 .multilineTextAlignment(.center) // 確保文字水平置中
-                .foregroundColor(isGlowing ? .red : Color.red.opacity(0.2)) // 霓虹燈主要顏色與透明度變化
+                .foregroundColor(isGlowing ? .red : Color.red.opacity(0.3)) // 霓虹燈主要顏色與透明度變化
                 .shadow(color: isGlowing ? Color.red.opacity(1.0) : Color.red.opacity(0.4), radius: isGlowing ? 50 : 20) // 主要霓虹燈光暈效果
                 .shadow(color: softGlow ? Color.red.opacity(0.8) : Color.red.opacity(0.5), radius: softGlow ? 20 : 10) // 額外忽亮忽暗的柔光
                 .onTapGesture {
@@ -65,7 +65,7 @@ struct OnAirView: View {
                 
             
             GIFImage(name: "CRT3")
-                .opacity(softGlow ? 0.15 : 0.1)
+                .opacity(softGlow ? 0.2 : 0.1)
                 .transition(.opacity)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
 //                .blur(radius: 5)
@@ -95,9 +95,9 @@ struct OnAirView: View {
     func flickerEffect() {
         if isOn{
             print("flickerEffect")
-            // 設定每 10 到 20 秒隨機發生一次閃爍
-            Timer.scheduledTimer(withTimeInterval: Double.random(in: 10...200), repeats: true) { _ in
-                let flickerCount = Int.random(in: 2...3) // 每次閃爍 1 到 3 下
+            // 設定每 7 到 20 秒隨機發生一次閃爍
+            Timer.scheduledTimer(withTimeInterval: Double.random(in: 7...20), repeats: true) { _ in
+                let flickerCount = Int.random(in: 2...5) // 每次閃爍 2 到 5 下
                 flicker(times: flickerCount)
             }
         }
@@ -127,8 +127,8 @@ struct OnAirView: View {
     
     func softGlowEffect() {
             // 讓霓虹燈持續忽亮忽暗，每 2 秒變化一次
-            Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
-                withAnimation(.easeInOut(duration: 1.5)) {
+        Timer.scheduledTimer(withTimeInterval: Double.random(in: 2.0...5.8), repeats: true) { _ in
+            withAnimation(.easeInOut(duration: Double.random(in: 0.9...2.0))) {
                     if isOn{
                         softGlow.toggle()
                         print("isOn:\(isOn) softGlow: \(softGlow)")
