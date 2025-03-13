@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-import SwiftUI
-
 struct OnAirView: View {
     @State private var isGlowing = true // 控制主要霓虹燈開關
     @State private var softGlow = true // 控制忽亮忽暗的光暈變化
@@ -26,11 +24,19 @@ struct OnAirView: View {
                 .onAppear {
                     softGlowEffect() // 啟動持續忽亮忽暗效果
                 }
-
+            
+                Image("CRT1")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .blendMode(.multiply)
+                        .opacity(0.3)
+            
+            GIFImage(name: "CRT3")
+            
                 
         }
         .onAppear {
-            flickerEffect() // 啟動隨機閃爍效果
+            flickerEffect() // 啟動隨機閃爍效
         }
         .statusBar(hidden: true) // 隱藏上方狀態欄（時間、電量）
         .preferredColorScheme(.dark) // 強制使用深色模式，確保黑色背景一致
@@ -75,7 +81,6 @@ struct OnAirView: View {
     }
 }
 
-
 struct ContentView: View {
     var body: some View {
         OnAirView()
@@ -86,4 +91,3 @@ struct ContentView: View {
 //    ContentView()
     OnAirView()
 }
-
